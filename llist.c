@@ -1,56 +1,92 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include "llist.h"
 #include <string.h>
 
-struct llist {
-  int value;
-  struct llist *next;
-};
-
-
-struct llist *node_alloc(int value) {
-  struct llist *node = malloc(sizeof(struct llist));
-  if (node != NULL) {
-    node->value = value;
-    node->next = NULL;
-  }
-  return node;
+void llist_insert_head(struct node **head, struct node *n) {
+    n->next = *head;
+    *head = n;
 }
 
-void node_free(struct llist *node) {
-  free(node);
-}
-
-
-void llist_insert_head(struct llist **head, int value) {
-  struct llist *node = node_alloc(value);
-  if (node != NULL) {
-    node->next = *head;
-    *head = node;
-  }
-}
-
-void llist_print(struct llist *head) {
-  for (struct llist *node = head; node != NULL; node = node->next) {
-    printf("%d ", node->value);
-  }
-  printf("\n");
-}
-
-int main(int argc, char *argv[]) {
-  struct llist *head = NULL;
-
-  for (int i = 1; i < argc; i++) {
-    if (strcmp(argv[i], "print") == 0) {
-      llist_print(head);
-    } else if (strcmp(argv[i], "insert") == 0 && i + 1 < argc) {
-      int value = atoi(argv[i+1]);
-      llist_insert_head(&head, value);
-      i++;
+struct node *llist_delete_head(struct node **head) {
+    if (*head == NULL) {
+        return NULL;
     } else {
-      printf("Unrecognized command: %s\n", argv[i]);
+        struct node *temp = *head;
+        *head = (*head)->next;
+        return temp;
     }
-  }
+}
 
-  return 0;
+void llist_insert_tail(struct node **head, struct node *n) {
+    if (*head == NULL) {
+        *head = n;
+    } else {
+        struct node *current = *head;
+        while (current->next != NULL) {
+            current = current->next;
+        }
+        current->next = n;
+    }
+}
+
+void llist_print(struct node *head) {
+    if (head == NULL) { 
+        printf("[empty]");
+    }
+}
+
+void llist_free(struct node **head) {
+    while (*head != NULL) {
+        struct node *temp = *head;
+        *head = (*head)->next;
+        node_free(temp);
+    }
+}
+
+struct node *node_alloc(int value) {
+    struct node *n = malloc(sizeof(struct node));
+    if (n == NULL) {
+        fprintf(stderr, "Error: Failed allocate memory for node.\n");
+        exit(EXIT_FAILURE);
+    }
+    n->value = value;
+    n->next = NULL;
+    return n;
+}
+
+void node_free(struct node *n) {
+    free(n);
+}
+
+int main(int argc, char **argv) {
+    struct node *head = NULL;
+
+    for (int i=1; i < argc;) {
+        if ((strcmp(argv[i], "ih")) == 0) {
+            struct node *new_node = node_alloc(atoi(argv[i+1]));
+            llist_insert_head(&head, new_node);
+            i += 2;
+        }
+        else if ((strcmp(argv[i], "it")) == 0) {
+            struct node *new_node = node_alloc(atoi(argv[i+1]));
+            llist_insert_tail(&head, new_node);
+            i += 2;
+        }
+        else if ((strcmp(argv[i], "dh")) == 0) {
+            llist_delete_head(&head);
+            i++;
+        }
+        else if ((strcmp(argv[i], "f")) == 0) {
+            llist_free(&head);
+            i++;
+        }
+        else if ((strcmp(argv[i], "p")) == 0) {
+            llist_print(head);
+            i++;
+        }
+        else {
+            printf("Error, command not found try again");
+        }
+    }
 }
